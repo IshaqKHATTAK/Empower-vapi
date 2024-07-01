@@ -1,0 +1,48 @@
+/* Ensure the container takes the full height of the screen */
+.recorder-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100vh;
+    width: 100%;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+h1 {
+    margin: 0;
+}
+
+.audio-list {
+    flex: 1;
+    width: 45%;
+    overflow-y: auto;
+    margin-bottom: 20px;
+    padding: 10px; /* Optional: Add some padding for better spacing */
+    box-sizing: border-box; /* Ensure padding is included in the height calculation */
+}
+
+
+.audio-list::-webkit-scrollbar {
+    display: none;
+}
+
+.audio-player {
+    width: 80%;
+    margin: 10px 0;
+}
+
+.record-button {
+    margin-bottom: 20px;
+    padding: 12px 24px;
+    font-size: 18px;
+    background-color: #6541e8; 
+    color: #fff; 
+    border: none; 
+    border-radius: 20px; 
+    cursor: pointer;
+    transition: background-color 0.3s ease; 
+}
+.record-button:hover {
+    background-color: #0056b3; /* Darken background color on hover */
+}
