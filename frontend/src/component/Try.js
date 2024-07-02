@@ -11,7 +11,7 @@
 //         });
 //         return transcript; // <-- Add this line to return the transcript value
 //       };
-      
+
 //       const handleClick = async () => {
 //           const finalresutl = await transcribeAudio()
 //           console.log(`transcribe text ${finalresutl}`)
@@ -96,3 +96,30 @@
 // };
 
 // export default Try;
+
+import React from 'react'
+import { AssemblyAI } from 'assemblyai'
+
+const Try = () => {
+    const client = new AssemblyAI({
+        apiKey: '0b0b5e6ae66047fd96ae0d1a83c31bd6',
+    });
+    const trans = async () => {
+        // Upload a file via local path and transcribe
+        let transcript = await client.transcripts.transcribe({
+            audio: "./output2.mp3",
+        });
+        return transcript
+    }
+    const HandleClick = async () => {
+        const result = await trans();
+        console.log(`Transcribed text: ${result}`);
+    }
+    return (
+        <>
+            <button onClick={HandleClick}>click me</button>
+        </>
+    )
+}
+
+export default Try

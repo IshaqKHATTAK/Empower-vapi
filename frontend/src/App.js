@@ -5,7 +5,8 @@ import Chat from './component/Chat';
 import AddAction from './component/AddAction';
 import AddKnowledge from './component/AddKnowledge';
 import Landing from './component/Landing';
-
+import Try from './component/Try';
+import Streaming from './component/Streaming.tsx';
 
 import {
   createBrowserRouter,
@@ -17,7 +18,7 @@ import { useEffect } from 'react';
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <Landing />
+    element: <Streaming name="React" />
   },
   {
     path: '/create',
