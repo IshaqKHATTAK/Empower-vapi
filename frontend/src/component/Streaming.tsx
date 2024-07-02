@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { AssemblyAI, RealtimeTranscript } from 'assemblyai';
-import { SoxRecording } from './sox'; 
+import { SoxRecording } from './sox.js'; 
 
 interface HelloWorldProps {
     name: string;
