@@ -1,13 +1,13 @@
 import './App.css';
 import Assistant from './component/Assistant';
 import CreateAssistant from './component/CreateAssistant';
-import Chat from './component/Chat';
+// import Chat from './component/Chat';
 import AddAction from './component/AddAction';
 import AddKnowledge from './component/AddKnowledge';
 import Landing from './component/Landing';
-import Try from './component/Try';
-import Streaming from './component/Streaming.tsx';
 
+import Streaming from './component/Streaming.tsx';
+import Stream from './component/Stream.js';
 import {
   createBrowserRouter,
   RouterProvider,
@@ -18,7 +18,7 @@ import { useEffect } from 'react';
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <Streaming name="React" />
+    element: <Stream />
   },
   {
     path: '/create',
@@ -32,10 +32,10 @@ const router = createBrowserRouter([
     path: '/action/:uuid',
     element: <AddAction />
   },
-  {
-    path:'/chat/:uuid',
-    element:<Chat />
-  }
+  // {
+  //   path:'/chat/:uuid',
+  //   element:<Chat />
+  // }
 ]);
 
 function App() {

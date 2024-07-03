@@ -6,6 +6,7 @@ import taskingai
 from helper_functions import Assistant
 from transcribe_synthesize import transcriber_whisper, transcribe_nova2, syntheizer_gtts
 from openai import OpenAI
+from flask_socketio import SocketIO, send
 from Create_database import database
 from dotenv import load_dotenv
 from flask_cors import CORS
@@ -13,7 +14,7 @@ import os
 #txt, doc, html, pdf, md
 app = Flask(__name__)
 CORS(app, expose_headers=['chat_id']) 
-
+socketio = SocketIO(app, cors_allowed_origins="*")
 
 load_dotenv()
 model_id = os.getenv('model_id')
@@ -228,10 +229,20 @@ def Chat(uuid):
         print(f"Error processing audio: {e}")
         return jsonify({"error": "Error processing audio"}), 500  
 
+@socketio.on('connect')
+def connect():
+    print('Client connected!')
+
+@socketio.on('message')
+def handle_message(data):
+    print('Received message:', data)
+    send('hello from server', broadcast=True)
+
+
 if __name__ == '__main__':
     port = int(os.getenv('FLASK_PORT', 5000))
     flask_host = os.getenv('FLASK_HOST', '127.0.0.1')
-    app.run(host=flask_host, port=port)
+    socketio.run(app, host=flask_host, port=port)
 
 
 # sys_prmpt1 = '''You a nice financial advisor help people to save money and invest them in good and profitiable places."'''

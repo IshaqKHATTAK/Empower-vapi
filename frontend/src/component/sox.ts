@@ -1,6 +1,3 @@
-// This code is a simplified and typed version adapted from the 'node-record-lpcm16' project by Gilles De Mey.
-// Original source code: https://github.com/gillesdemey/node-record-lpcm16
-
 import { ok as assert } from "assert"
 import { ChildProcess, spawn } from "child_process"
 import { Readable } from "stream"
