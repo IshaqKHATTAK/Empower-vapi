@@ -1,4 +1,12 @@
-/* Ensure the container takes the full height of the screen */
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #f5f5f5;
+    font-family: Arial, sans-serif;
+}
+
 .recorder-container {
     display: flex;
     flex-direction: column;
@@ -7,42 +15,97 @@
     width: 100%;
     padding: 20px;
     box-sizing: border-box;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+   
 }
+
+
 
 h1 {
     margin: 0;
 }
 
-.audio-list {
-    flex: 1;
-    width: 45%;
-    overflow-y: auto;
-    margin-bottom: 20px;
-    padding: 10px; /* Optional: Add some padding for better spacing */
-    box-sizing: border-box; /* Ensure padding is included in the height calculation */
+.loading-spinner {
+    position: fixed;
+    bottom: 70px; 
+    left: 40%;
+    transform: translateX(-50%);
 }
 
 
-.audio-list::-webkit-scrollbar {
+
+
+.ChatCard {
+    width: 45%;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+.ChatCard-::-webkit-scrollbar {
     display: none;
 }
 
-.audio-player {
-    width: 80%;
-    margin: 10px 0;
+
+.audio-item {
+    margin-bottom: 15px;
+    display: flex;
+    justify-content: flex-start;
+    animation: bubble-animation 0.5s ease-out;
+}
+
+.audio-item.user {
+    justify-content: flex-end;
+}
+
+
+.audio-item .audio-player {
+    display: block;
+    width: 100%;
+    max-width: 250px;
+    margin: 0 10px;
+}
+
+.audio-item.user .audio-player {
+    order: 1;
+}
+
+.audio-item.response .audio-player {
+    order: 0;
+}
+
+
+@keyframes bubble-animation {
+    0% {
+        transform: scale(0.6);
+        opacity: 0;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
 }
 
 .record-button {
-    margin-bottom: 20px;
+    position: fixed;
+    bottom: 20px;
     padding: 12px 24px;
     font-size: 18px;
-    background-color: #6541e8; 
-    color: #fff; 
-    border: none; 
-    border-radius: 20px; 
+    background-color: #6541e8;
+    color: #fff;
+    border: none;
+    border-radius: 20px;
     cursor: pointer;
-    transition: background-color 0.3s ease; 
+    transition: background-color 0.3s ease;
+    margin-bottom: 5px;
+    margin-left: 170px;
+    
 }
+
+
 .record-button:hover {
     background-color: #0056b3; /* Darken background color on hover */
-}
+} 

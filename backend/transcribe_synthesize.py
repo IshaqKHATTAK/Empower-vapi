@@ -1,6 +1,7 @@
 import time
 from gtts import gTTS
 from io import BytesIO
+import requests
 from deepgram import (
     DeepgramClient,
     DeepgramClientOptions,
@@ -13,6 +14,7 @@ from deepgram import (
     PrerecordedOptions,
     FileSource,
 )
+from openai import OpenAI
 
 import uuid
 import assemblyai as aai
@@ -30,45 +32,92 @@ Assemly_AI_API = os.getenv('Assemly_AI_API')
 
 ELEVENLABS_API_KEY = XI_KEY
 
-# class LocalTranscribe():
-#     def __init__(self) -> None:
-#         self.deep_gram_api = None
-#         self.openai_api = None
+class EmpowerTranscribe:
+    def __init__(self) -> None:
+        self.deep_gram_api = None
+        self.openai_api = None
+        self.elevenlab_api = None
 
-#     def transcriber_whisper(client, audio_path):
-#         '''Convert audio into text'''
-#         audio_file= open(audio_path, "rb")
-#         print(audio_file)
-#         transcription = client.audio.transcriptions.create(
-#         model="whisper-1", 
-#         file=audio_file 
-#         )
-#         return transcription.text
+    def transcriber_whisper(self, openai_api, audio_path):
+        '''Convert audio into text'''
+        self.openai_api = openai_api 
+        client = OpenAI(api_key=openai_api)
+        audio_file= open(audio_path, "rb")
+        transcription = client.audio.transcriptions.create(
+        model="whisper-1", 
+        file=audio_file 
+        )
+
+        return transcription.text
     
-#     def transcribe_nova2(AUDIO_FILE_PATH):
-#         with open(AUDIO_FILE_PATH, "rb") as file:
-#             buffer_data = file.read()
-#         payload: FileSource = {
-#                 "buffer": buffer_data,
-#             }
-#         options = PrerecordedOptions(
-#                 model="nova-2",
-#                 smart_format=True,
-#             )
-#         response = deepgram.listen.prerecorded.v("1").transcribe_file(payload, options)
-#         return response.results.channels[0].alternatives[0].transcript
+    def transcribe_nova2(self,DEEPGRAM_KEY, AUDIO_FILE_PATH):
+        deepgram = DeepgramClient(DEEPGRAM_KEY)
+        with open(AUDIO_FILE_PATH, "rb") as file:
+            buffer_data = file.read()
+        payload: FileSource = {
+                "buffer": buffer_data,
+            }
+        options = PrerecordedOptions(
+                model="nova-2",
+                smart_format=True,
+            )
+        response = deepgram.listen.prerecorded.v("1").transcribe_file(payload, options)
+        return response.results.channels[0].alternatives[0].transcript
 
-# class LocalSynthesizer():
-#     def __init__(self) -> None:
-#         self.openai_api = None
+class Empowervoice:
+    def __init__(self) -> None:
+        self.openai_api = None
+        self.elevenlabs_api = None
 
-#     def syntheizer_gtts(text,path_to_save = 'output2.mp3'):
-#         tts = gTTS(text)
-#         mp3_fp = BytesIO()
-#         tts.write_to_fp(mp3_fp)
-#         mp3_fp.seek(0)
-#         tts.save(path_to_save)
-#         return mp3_fp
+    def syntheizer_gtts(self,text,path_to_save = 'output2.mp3'):
+        tts = gTTS(text)
+        mp3_fp = BytesIO()
+        tts.write_to_fp(mp3_fp)
+        mp3_fp.seek(0)
+        tts.save(path_to_save)
+        return mp3_fp
+
+    def voices_elevenlabs(self, ELEVENLABS_API):
+        url = "https://api.elevenlabs.io/v1/voices"
+        headers = {
+        "Accept": "application/json",
+        "xi-api-key": ELEVENLABS_API,
+        "Content-Type": "application/json"
+        }
+
+        response = requests.get(url, headers=headers)
+        data = response.json()
+        for voice in data['voices']:
+            return (f"{voice['name']}; {voice['voice_id']}")
+
+    def synthesizer_elevenlabs(self,ELEVENLABS_API_KEY, text: str, path_to_save = 'output2.mp3'):
+        self.elevenlabs_api = ELEVENLABS_API_KEY
+        client = ElevenLabs(
+            api_key=ELEVENLABS_API_KEY,
+        )
+        
+        response = client.text_to_speech.convert(
+            voice_id="pNInz6obpgDQGcFmaJgB", # Dave voice
+            optimize_streaming_latency="0",
+            output_format="mp3_22050_32",
+            text=text,
+            model_id="eleven_turbo_v2", # use the turbo model for low latency, for other languages use the `eleven_multilingual_v2`
+            voice_settings=VoiceSettings(
+                stability=0.0,
+                similarity_boost=1.0,
+                style=0.0,
+                use_speaker_boost=True,
+            ),
+        )
+        # Writing the audio to a file
+        with open(path_to_save, "wb") as f:
+            for chunk in response:
+                if chunk:
+                    f.write(chunk)
+
+        # Return the path of the saved audio file
+        return path_to_save
+
 
 def AssemlyAI_streaming(KEY):
     aai.settings.api_key = KEY
@@ -106,7 +155,6 @@ def AssemlyAI_streaming(KEY):
     transcriber.close()
 
 # AssemlyAI_streaming(Assemly_AI_API)
-
 def streaming_detection(API_KEY):
     try:
         # example of setting up a client config. logging values: WARNING, VERBOSE, DEBUG, SPAM
@@ -227,73 +275,6 @@ def streaming_detection(API_KEY):
     except Exception as e:
         print(f"Could not open socket: {e}")
         return
-
-def transcriber_whisper(client, audio_path):
-    '''Convert audio into text'''
-    audio_file= open(audio_path, "rb")
-    print(audio_file)
-    transcription = client.audio.transcriptions.create(
-    model="whisper-1", 
-    file=audio_file 
-    )
-    return transcription.text
-
-def transcribe_nova2(AUDIO_FILE_PATH):
-    deepgram = DeepgramClient(API_KEY)
-    with open(AUDIO_FILE_PATH, "rb") as file:
-        buffer_data = file.read()
-    payload: FileSource = {
-            "buffer": buffer_data,
-        }
-    options = PrerecordedOptions(
-            model="nova-2",
-            smart_format=True,
-        )
-    response =  deepgram.listen.prerecorded.v("1").transcribe_file(payload, options)
-    return response.results.channels[0].alternatives[0].transcript
-
-def syntheizer_gtts(text):
-    tts = gTTS(text)
-    mp3_fp = BytesIO()
-    tts.write_to_fp(mp3_fp)
-    mp3_fp.seek(0)
-    tts.save('output2.mp3')
-    return mp3_fp
-
-def text_to_speech_file(text: str) -> str:
-    response = client.text_to_speech.convert(
-        voice_id="pNInz6obpgDQGcFmaJgB", # Adam pre-made voice
-        optimize_streaming_latency="0",
-        output_format="mp3_22050_32",
-        text=text,
-        model_id="eleven_turbo_v2", # use the turbo model for low latency, for other languages use the `eleven_multilingual_v2`
-        voice_settings=VoiceSettings(
-            stability=0.0,
-            similarity_boost=1.0,
-            style=0.0,
-            use_speaker_boost=True,
-        ),
-    )
-
-    # uncomment the line below to play the audio back
-    # play(response)
-
-    # Generating a unique file name for the output MP3 file
-    save_file_path = f"{uuid.uuid4()}.mp3"
-
-    # Writing the audio to a file
-    with open(save_file_path, "wb") as f:
-        for chunk in response:
-            if chunk:
-                f.write(chunk)
-
-    print(f"{save_file_path}: A new audio file was saved successfully!")
-
-    # Return the path of the saved audio file
-    return save_file_path
-
-
-
 
 
 # from pyht import Client

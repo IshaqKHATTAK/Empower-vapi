@@ -32,14 +32,14 @@ class Assistant:
         
     
     #create assistant with name and model for chat completion
-    def Create_assistant(self, model_id, name,prompt):
+    def Create_assistant(self, model_id, name,prompt,description = "You are a kind assistant here to help people with the best of your knwledge. 'Ensure that your response is according to the prompt given to you'"):
         self.model_id = model_id
         self.assistant_name = name
         print('creating assistant ...')
         assistant = taskingai.assistant.create_assistant(
             model_id= self.model_id,
             name= self.assistant_name,
-            description="You are a kind assistant here to help people with the best of your knwledge. 'Ensure that your response is according to the prompt given to you'",
+            description=description,
             system_prompt_template=[prompt],
             memory=AssistantNaiveMemory()
         )

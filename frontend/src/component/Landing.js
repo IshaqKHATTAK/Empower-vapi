@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useEffect } from 'react';
 import { Card, Flex } from 'antd';
-import { SoundOutlined, FileTextOutlined, FunctionOutlined, PlusOutlined } from '@ant-design/icons';
+import { AudioOutlined, EditOutlined, FileTextOutlined, FunctionOutlined, PlusOutlined } from '@ant-design/icons';
 import { Button, } from 'antd';
 import { useNavigate } from 'react-router-dom';
 
@@ -23,7 +23,7 @@ const Landing = () => {
             navigate('/create')
         }
         //He want to comunicate with the assistant
-        else{
+        else {
             navigate(`/chat/${value.uuid}`)
         }
     }
@@ -35,6 +35,12 @@ const Landing = () => {
         }
         else if (value === 'action') {
             navigate(`/action/${uuid}`)
+        }
+        else if (value === 'transcriber'){
+            navigate(`/transcriber/${uuid}`)
+        }
+        else if(value === 'synthesizer'){
+            navigate(`/synthesizer/${uuid}`)
         }
     }
     const fetchData = async () => {
@@ -62,7 +68,7 @@ const Landing = () => {
     }
     return (
         <>
-            <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', }}>
+            <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap',  }}>
                 {data.map((value, index) => (
                     <Card
                         hoverable
@@ -77,13 +83,31 @@ const Landing = () => {
                         <Meta
                             title={value.assistant_name}
                             description={value.date}
+                            style={{textAlign:'center', }}
                         />
                         <div style={{ display: 'flex', flexDirection: 'column' }}>
                             <br />
-
+                            <div style={{display:'flex', marginBottom:'20px'}} >
+                                <Button type="primary" icon={<EditOutlined />} 
+                                style={{width:'70px',height:'40px', marginLeft:'20px'}}
+                                disabled={value.assistant_id === 'Click here!'}
+                                block={value.assistant_id === 'Click here!'}
+                                onClick = { (e) => { ButtonClicked(e, 'transcriber', value.uuid) }}
+                                >
+                                </Button>
+                                <Button type="primary" icon={<AudioOutlined />} 
+                                style={{width:'70px',height:'40px', marginLeft:'60px'}}
+                                disabled={value.assistant_id === 'Click here!'}
+                                block={value.assistant_id === 'Click here!'}
+                                onClick = {(e) => {ButtonClicked(e, 'synthesizer',value.uuid)}}
+                                >
+                                </Button>
+                            </div>
                             <Button disabled={value.assistant_id === 'Click here!'}
                                 block={value.assistant_id === 'Click here!'}
-                                type="primary" icon={<FileTextOutlined />} style={{ margin: '5px' }} onClick={(event) => { ButtonClicked(event, 'KB', value.uuid) }}>
+                                type="primary" icon={<FileTextOutlined />} 
+                                style={{ margin: '5px' }} 
+                                onClick={(event) => { ButtonClicked(event, 'KB', value.uuid) }}>
                                 Add knowledge Base
                             </Button>
                             <Button

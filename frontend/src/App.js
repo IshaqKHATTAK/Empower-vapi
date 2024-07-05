@@ -5,7 +5,8 @@ import Chat from './component/Chat';
 import AddAction from './component/AddAction';
 import AddKnowledge from './component/AddKnowledge';
 import Landing from './component/Landing';
-
+import Transcriber from './component/Transcriber';
+import Synthesizer from './component/Synthesizer';
 
 import {
   createBrowserRouter,
@@ -34,15 +35,23 @@ const router = createBrowserRouter([
   {
     path:'/chat/:uuid',
     element:<Chat />
+  },
+  {
+    path:'/transcriber/:uuid',
+    element:<Transcriber />
+  },
+  {
+    path:'/synthesizer/:uuid',
+    element:<Synthesizer />
   }
 ]);
 
 function App() {
 
   return (
-    <>
-      <RouterProvider router={router} />
-    </>
+    <div style={{background:'#ded5e6', height:'100vh'}}>
+      <RouterProvider router={router}/>
+    </div>
   );
 }
 export default App;

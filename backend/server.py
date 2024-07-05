@@ -4,7 +4,7 @@ from flask_cors import CORS
 import sqlite3 as sql
 import taskingai
 from helper_functions import Assistant
-from transcribe_synthesize import transcriber_whisper, transcribe_nova2, syntheizer_gtts
+from transcribe_synthesize import EmpowerTranscribe, Empowervoice
 from openai import OpenAI
 from Create_database import database
 from dotenv import load_dotenv
@@ -20,11 +20,12 @@ model_id = os.getenv('model_id')
 embd_model_id = os.getenv('embed_model_id')
 T_API_KEY = os.getenv('Tasking_API_KEY')
 openai_api = os.getenv('OPENAI_API_KEY')
+XI_KEY  = os.getenv('Eleven_LAB_API')
+
 path = "./output2.mp3"
 
 
-taskingai.init(api_key=T_API_KEY) 
-client = OpenAI(api_key=openai_api)
+taskingai.init(api_key=T_API_KEY,host='https://tasking.fayazk.com') 
 
 UPLOAD_FOLDER = 'data'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -48,30 +49,13 @@ def create_assistant():
         chatComp_model = data.get('model')
         assistant_name = data.get('assistant')
         sys_prompt = data.get('prompt')
-        transcriber = data.get('transcriber')
-        synthesizer = data.get('synthesizer')
+        description = data.get('description')
         
         custom_assistant = Assistant()
-        assistant = custom_assistant.Create_assistant(model_id=chatComp_model, name=assistant_name,prompt=sys_prompt)
-        #collection = custom_assistant.Create_collection(name = 'my gym data', embd_model_id = embd_model_id, collection_description = 'the file contian the gym data so take alwasy refer to it when some ask anything about gym.')
-        #record = custom_assistant.Create_insert_records(path = "./data/output2.txt", collection_id = collection.collection_id, title="Collection data records")
-        #custom_assistant.Edit_assistant(assistant_id=assistant.assistant_id,collection_id=collection.collection_id)
-        
-        # if transcriber == 'whisper':
-        #     audio_path = "./audio/voice_note.mp3"
-        #     transcribed_text = transcriber_whisper(client, audio_path)
-        #     print(transcribed_text)
-        # elif transcriber == "nova2":
-        #     audio_path = "./audio/voice_note.mp3"
-        #     transcribed_text = transcribe_nova2(audio_path)
-        #     print(transcribed_text)
-
-        # if synthesizer == 'gtts':
-        #     print('insie of GTTs')
-        #     syntheizer_gtts(transcribed_text)
+        assistant = custom_assistant.Create_assistant(model_id=chatComp_model, name=assistant_name,prompt=sys_prompt, description=description)
 
         db = database()
-        db.insert_rows(assistant_id=assistant.assistant_id, assistant_name=assistant_name, transcriber=transcriber, synthesizer=synthesizer)
+        db.insert_rows(assistant_id=assistant.assistant_id, assistant_name=assistant_name, transcriber='', synthesizer='')
         
         # Create a response
         response = {
@@ -79,13 +63,11 @@ def create_assistant():
             'data': {
                 'assistant': assistant_name,
                 'prompt': sys_prompt,
-                'model': chatComp_model,
-                'synthesizer':synthesizer,
-                'transcriber':transcriber
+                'model': chatComp_model
             }
         }
         return jsonify(response), 200
-     
+
 @app.route('/action/<uuid>', methods = ['POST','GET'])
 def add_cation(uuid):
      if request.method == 'POST':
@@ -116,10 +98,11 @@ def add_cation(uuid):
             }
         }
         return jsonify(response), 200
-        
+
 @app.route('/addknowledge/<uuid>', methods = ['POST','GET'])
 def add_knowledgebase(uuid):
     print('uudi == ',uuid)
+    
     if request.method == 'POST':
         with sql.connect('database.db') as con:
             cur = con.cursor()
@@ -127,16 +110,20 @@ def add_knowledgebase(uuid):
             record = record.fetchone()
             assistant_id = record[1] 
 
+        
         file = request.files['file']
         title = request.form['title']
         chunk_size = request.form['chunkSize']
         chunk_overlap = request.form['chunkOverlap']
+        collection_name = request.form['collection_name']
+        collection_deescription = request.form['collection_description']
+        print(f'collection name = {collection_name} collection description = {collection_deescription}')
 
         file_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
         file.save(file_path)
         custom_assistant = Assistant()
         
-        collection = custom_assistant.Create_collection(name='collection name', embd_model_id=embd_model_id,collection_description='use this collection for retriving data about empower btis')
+        collection = custom_assistant.Create_collection(name=collection_name, embd_model_id=embd_model_id,collection_description=collection_deescription)
         custom_assistant.Create_insert_records(path=file_path, collection_id=collection.collection_id,title=title,chuck_size=chunk_size, chnk_overlap=chunk_overlap)
         
         # assistant_id = "X5lMmdpINdfCWApN1YvbiSMb"
@@ -167,7 +154,6 @@ def Chat(uuid):
 
     audio_file = request.files.get('audio')
     chat_id = request.form.get('chat_id')
-    print('CHAT_ID ==',chat_id)
 
     if audio_file.filename == '':
         return jsonify({"error": "No selected file"}), 400
@@ -179,41 +165,31 @@ def Chat(uuid):
             records = cur.execute('SELECT * FROM assistants WHERE uuid = ?', (uuid,))
             record = records.fetchone()
             assistant_id = record[1]
-            transcribe = record[3]
-            synthesizer = record[4]
 
         audio_file.save(audio_path)
-        #response_audio_content = speech_to_speech(client, audio_path, assist_id, thread_id)
-        if transcribe == 'whisper':
-            transcribed_text = transcriber_whisper(client, audio_path)
-            print("transcribed text used whisper",transcribed_text)
-        elif transcribe == "nova2":
-            transcribed_text = transcribe_nova2(audio_path)
-            print("transcribed text used nova2",transcribed_text)
+        
+        #transcribe the audio to text
+        transcriber = EmpowerTranscribe()
 
+        transcribed_text = transcriber.transcriber_whisper(openai_api=openai_api, audio_path=audio_path)
+        print("transcribed text used whisper",transcribed_text)
+        
+        #create chat id if not exsit
         if not chat_id:
             create_chat = chat_creation(assistant_id=assistant_id)
             chat_id = create_chat.chat_id
             print('created chat id',chat_id)
-
+        #assistant llm
         response = chat_with_assitant(chat_id,assistant_id,transcribed_text)
         print('assistant response',response.content.text)
 
-        if synthesizer == 'gtts':
-            audio_response = syntheizer_gtts(response.content.text)
+        #synthesizer ElevenLabs
+        synthesizer = Empowervoice()
+        audio_response = synthesizer.synthesizer_elevenlabs(ELEVENLABS_API_KEY=XI_KEY, text=response.content.text)
         
         if not audio_response:
             return jsonify({"error": "Empty response audio"}), 500
-        # response = send_file(
-        #     path, mimetype='audio/mpeg', as_attachment=True, download_name='output2.mp3',
-            
-        # )
-        # response.headers['chat_id'] = chat_id
 
-        # response = make_response(send_file(
-        #     audio_response, mimetype='audio/mpeg', as_attachment=True, download_name='output2.mp3',
-            
-        # ))
         response = make_response(send_file(
         audio_response,
         mimetype='audio/mpeg',

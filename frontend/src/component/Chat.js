@@ -1,92 +1,17 @@
-// import React, { useState } from 'react';
-// import './Recorder.css';
-// import sendAudioToServer from './Api'; // Import the sendAudioToServer function
-// import WebSocket from 'ws';
-
-// const BASE_URL = 'http://127.0.0.1:5000'
-// const route = 'ask'
-
-// const Chat = () => {
-//     const [mediaRecorder, setMediaRecorder] = useState(null);
-//     const [recordedAudios, setRecordedAudios] = useState([]);
-//     const [isRecording, setIsRecording] = useState(false);
-//     const ws = new WebSocket(`${BASE_URL}/${route}`);
-
-//     recorder.ondataavailable = (event) => {
-//         const audioChunk = event.data;
-//         ws.send(audioChunk);
-//     };
-//     const startRecording = async () => {
-//         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-//         const recorder = new MediaRecorder(stream);
-//         let chunks = [];
-
-//         recorder.ondataavailable = (event) => {
-//             chunks.push(event.data);
-//         };
-
-//         recorder.onstop = () => {
-//             const audioBlob = new Blob(chunks, { type: 'audio/mp3' });
-//             console.log("Audio Blob:", audioBlob);
-//             // setRecordedAudios(prev => [...prev, audioBlob]); 
-//             // sendAudioToServer(audioBlob); 
-//             setRecordedAudios(prev => [...prev, { blob: audioBlob, type: 'user' }]);
-//             sendAudioToServer(audioBlob, (responseAudioBlob) => {
-//                 setRecordedAudios(prev => [...prev, { blob: responseAudioBlob, type: 'response' }]);
-//             });
-//         };
-
-//         recorder.start();
-//         setIsRecording(true);
-//         setMediaRecorder(recorder);
-//     };
-
-//     const stopRecording = () => {
-//         if (mediaRecorder) {
-//             mediaRecorder.stop();
-//             setIsRecording(false);
-//         }
-//     };
-
-//     return (
-//         <>
-//             <div className="container">
-//                 <div className="recorder-container">
-//                     <h1>Voice Assistant</h1>
-//                     <div className="audio-list">
-//                         {recordedAudios.map((audio, index) => (
-//                             // <audio key={index} controls src={URL.createObjectURL(audioBlob)} className="audio-player" />
-//                             <div key={index} className={`audio-item ${audio.type}`}>
-//                                 <audio controls src={URL.createObjectURL(audio.blob)} className="audio-player" />
-//                             </div>
-//                         ))}
-//                     </div>
-//                     <button className="record-button" onClick={isRecording ? stopRecording : startRecording}>
-//                         {isRecording ? 'Listening...' : 'Start Recording'}
-//                     </button>
-//                 </div>
-//             </div>
-//         </>
-//     );
-// };
-
-// export default Chat;
-
-
-
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './Recorder.css';
-import sendAudioToServer from './Api'; 
-import { useEffect, useNavigate } from 'react';
+import sendAudioToServer from './Api';
 import { useParams } from 'react-router-dom';
+import { LoadingOutlined, UserOutlined, RobotOutlined } from '@ant-design/icons';
+import { Card, Space, Spin } from 'antd';
 
 const Chat = () => {
     const [mediaRecorder, setMediaRecorder] = useState(null);
     const [recordedAudios, setRecordedAudios] = useState([]);
     const [isRecording, setIsRecording] = useState(false);
     const [chatid, setChatid] = useState('')
-    const {uuid } = useParams()
+    const [loading, setLoading] = useState(false)
+    const { uuid } = useParams();
 
     const startRecording = async () => {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -97,31 +22,28 @@ const Chat = () => {
         };
 
         recorder.onstop = () => {
+            setLoading(true)
             const audioBlob = new Blob(chunks, { type: 'audio/mp3' });
-            console.log("Audio Blob:", audioBlob);
-            // setRecordedAudios(prev => [...prev, audioBlob]);
-            // sendAudioToServer(audioBlob);
+
             const chat_id = localStorage.getItem(`chat_id_${uuid}`) || '';
-            console.log(`chat id at ||, ${chat_id}`)
+
             setRecordedAudios(prev => [...prev, { blob: audioBlob, type: 'user' }]);
             sendAudioToServer(audioBlob, (responseAudioBlob, newChatId) => {
                 setRecordedAudios(prev => [...prev, { blob: responseAudioBlob, type: 'response' }]);
-                console.log(`Received new chat_id from backend: ${newChatId}`);
+
                 if (newChatId) {
                     setChatid(newChatId);
-                    localStorage.setItem(`chat_id_${uuid}`, newChatId); // Update localStorage with new chat_id
+                    localStorage.setItem(`chat_id_${uuid}`, newChatId);
                 }
-            }, { uuid, chat_id});
-            
-            // const storedChatId = localStorage.getItem(`chat_id_${uuid}`);
-            // if (storedChatId === null) {
-            //     localStorage.setItem(`chat_id_${uuid}`, chatid);
-            //   }
+                setLoading(false)
+            }, { uuid, chat_id });
         };
+
         recorder.start();
         setIsRecording(true);
         setMediaRecorder(recorder);
     };
+
     const stopRecording = () => {
         if (mediaRecorder) {
             mediaRecorder.stop();
@@ -129,25 +51,51 @@ const Chat = () => {
         }
     };
 
+    const contentStyle = {
+        padding: 50,
+    };
+    const content = <div style={contentStyle} />;
+
+    const backgorundstyle = { background: isRecording ? '#d9c5eb' : '#ded5e6', transition: 'background 0.9s ease-in-out' }
     return (
-        <>
-            <div className="container">
-                <div className="recorder-container">
-                    <h1>Voice Assistant</h1>
-                    <div className="audio-list">
-                        {recordedAudios.map((audio, index) => (
-                            // <audio key={index} controls src={URL.createObjectURL(audioBlob)} className="audio-player" />
-                            <div key={index} className={`audio-item ${audio.type}`}>
-                                <audio controls src={URL.createObjectURL(audio.blob)} className="audio-player" />
-                            </div>
-                        ))}
-                    </div>
-                    <button className="record-button" onClick={isRecording ? stopRecording : startRecording}>
+        <div className="container" >
+            <div className="recorder-container" style={backgorundstyle} >
+
+                <Card
+                    title={<div style={{ textAlign: 'center', color: '#6541e8', fontSize: '20px' }}>Voice Assistant</div>}
+                    className='ChatCard'
+                    hoverable
+
+                >
+                    {recordedAudios.map((audio, index) => (
+                        <div key={index} className={`audio-item ${audio.type}`}>
+
+                            {audio.type === 'user' ? (
+                                <>
+                                    <UserOutlined style={{ fontSize: 20, marginLeft: 'auto', color: '#6541e8', justifyContent:'flex-end' }} />
+                                </>
+                            ) : (
+                                <>
+                                    <RobotOutlined style={{ fontSize: 20, marginRight: 10, color: '#6541e8' }} />
+                                </>
+                            )}
+                             <audio controls src={URL.createObjectURL(audio.blob)} className="audio-player" />
+
+                        </div>
+                    ))}
+                    {loading && (
+                        <div className="loading-spinner">
+                            <Spin tip="Getting answer" size="large" >
+                                {content}
+                            </Spin>
+                        </div>
+                    )}
+                    <button className="record-button" onClick={isRecording ? stopRecording : startRecording} >
                         {isRecording ? 'Listening...' : 'Start Recording'}
                     </button>
-                </div>
+                </Card>
             </div>
-        </>
+        </div>
     );
 };
 

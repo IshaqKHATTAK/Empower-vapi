@@ -12,30 +12,15 @@ const onFinishFailed = (errorInfo) => {
 const { TextArea } = Input;
 const chatmodel = [
     {
-        'openai/gpt-4': 'TpB5TLsq'
+        'openai/gpt-4': 'TpYYoF10'
     },
     {
-        'anthropic/claude-3-sonnet': 'TpTP46IM',
-    },
-    {
-        'openai/gpt-3.5-turbo': 'TpKZuZ81'
+        'openai/gpt-3.5-turbo': 'TpLuZxTI'
     }, {
-        'openai/gpt-4o': 'TpFKdsaM'
+        'openai/gpt-4o': 'TpEGEtek'
     }
 ]
-const transcribers = [
-    {
-        'openai/whisper-1': 'whisper'
-    },
-    {
-        'DeepGram/nova-2': 'nova2'
-    },
-]
-const synthesizer = [
-    {
-        'Google/gtts': 'gtts'
-    },
-]
+
 
 const CreateAssistant = () => {
     const navigate = useNavigate();
@@ -43,7 +28,7 @@ const CreateAssistant = () => {
     const onFinish = async (values) => {
         try {
             const route = 'assistant'
-            const data = await ApiFetch({values,route});
+            const data = await ApiFetch({ values, route });
             console.log('Success:', data);
             navigate('/');
         } catch (error) {
@@ -101,39 +86,26 @@ const CreateAssistant = () => {
                             <TextArea rows={7} />
                         </Form.Item>
 
-                        <Form.Item label="model" name="model">
+                        <Form.Item label="Description" name='description'
+                            rules={[
+                                {
+                                    required: true,
+                                }
+                            ]}>
+                            <TextArea rows={4}/>
+                        </Form.Item>
+
+                        <Form.Item label="model" name="model"
+                            rules={[
+                                {
+                                    required: true,
+                                }
+                            ]}
+                        >
                             <Select>
                                 {chatmodel.map((model, index) => {
                                     const modelName = Object.keys(model)[0];
                                     const modelId = model[modelName];
-                                    return (
-                                        <Select.Option key={index} value={modelId}>
-                                            {modelName}
-                                        </Select.Option>
-                                    );
-                                })}
-                            </Select>
-                        </Form.Item>
-
-                        <Form.Item label="transcriber" name="transcriber">
-                            <Select>
-                                {transcribers.map((model, index) => {
-                                    const modelName = Object.keys(model)[0];
-                                    const modelId = model[modelName];
-                                    return (
-                                        <Select.Option key={index} value={modelId}>
-                                            {modelName}
-                                        </Select.Option>
-                                    );
-                                })}
-                            </Select>
-                        </Form.Item>
-
-                        <Form.Item label="synthesizer" name="synthesizer">
-                            <Select>
-                                {synthesizer.map((mdl, index) => {
-                                    const modelName = Object.keys(mdl)[0];
-                                    const modelId = mdl[modelName]
                                     return (
                                         <Select.Option key={index} value={modelId}>
                                             {modelName}
@@ -150,7 +122,7 @@ const CreateAssistant = () => {
                             }}
                         >
                             <Button type="primary" htmlType="submit" style={styles.button}>
-                                Submit
+                                Create
                             </Button>
                         </Form.Item>
                     </Form>
@@ -166,7 +138,7 @@ const styles = {
         justifyContent: 'center',
         alignItems: 'center',
         height: '100vh',
-        backgroundColor: '#f0f2f5',
+        backgroundColor: '#ded5e6',
     },
     formWrapper: {
         padding: '20px',
@@ -181,7 +153,9 @@ const styles = {
     },
     form: {
         display: 'flex',
+        height:'80vh',
         flexDirection: 'column',
+        
     },
     button: {
         width: '100%',
